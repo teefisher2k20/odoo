@@ -1,8 +1,9 @@
 # PowerShell script to create Odoo database user
-$env:PGPASSWORD = "admin"
+# $env:PGPASSWORD = "admin"  # Disabled - will prompt for password instead
 $psqlPath = "C:\Program Files\PostgreSQL\15\bin\psql.exe"
 
 Write-Host "Attempting to create/fix odoo user in PostgreSQL..." -ForegroundColor Cyan
+Write-Host "You will be prompted for the postgres user password." -ForegroundColor Yellow
 Write-Host ""
 
 # Try to drop and recreate the user
@@ -16,21 +17,9 @@ try {
         Write-Host "SUCCESS: User 'odoo' created successfully!" -ForegroundColor Green
     } else {
         Write-Host ""
-        Write-Host "First attempt failed. Trying with different postgres password..." -ForegroundColor Yellow
-        
-        # Try with 'postgres' as password
-        $env:PGPASSWORD = "postgres"
-        & $psqlPath -U postgres -c $command 2>&1 | Write-Host
-        
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host ""
-            Write-Host "SUCCESS: User 'odoo' created successfully!" -ForegroundColor Green
-        } else {
-            Write-Host ""
-            Write-Host "ERROR: Could not create user. Please enter your postgres password manually." -ForegroundColor Red
-            Write-Host "Run this command in Command Prompt:" -ForegroundColor Yellow
-            Write-Host 'fix_db_user.bat' -ForegroundColor White
-        }
+        Write-Host "ERROR: Could not create user. Please check your postgres password." -ForegroundColor Red
+        Write-Host "Run this command in Command Prompt:" -ForegroundColor Yellow
+        Write-Host 'fix_db_user.bat' -ForegroundColor White
     }
 } catch {
     Write-Host "Error: $_" -ForegroundColor Red
@@ -39,7 +28,7 @@ try {
 # Test the connection
 Write-Host ""
 Write-Host "Testing connection with odoo user..." -ForegroundColor Cyan
-$env:PGPASSWORD = "odoo"
+# $env:PGPASSWORD = "odoo"  # Disabled - will prompt for password instead
 & $psqlPath -U odoo -d postgres -c "SELECT version();" 2>&1 | Select-Object -First 3 | Write-Host
 
 if ($LASTEXITCODE -eq 0) {
