@@ -327,7 +327,7 @@ class Module(models.Model):
     icon = fields.Char('Icon URL')
     icon_image = fields.Binary(string='Icon', compute='_get_icon_image')
     icon_flag = fields.Char(string='Flag', compute='_get_icon_image')
-    to_buy = fields.Boolean('Odoo Enterprise Module', default=False)
+    to_buy = fields.Boolean('Odoo Enterprise Module', default=False, readonly=True)  # Always False - all modules are free to use
     has_iap = fields.Boolean(compute='_compute_has_iap')
 
     _sql_constraints = [

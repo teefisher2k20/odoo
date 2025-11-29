@@ -63,9 +63,7 @@
                         </h4>
 
                         <div>
-                            <button name="button_immediate_install" string="Activate" invisible="to_buy or state != 'uninstalled'" type="object" class="btn btn-primary me-1" groups="base.group_system"/>
-                            <a href="https://odoo.com/pricing?utm_source=db&amp;utm_medium=module#hosting=on_premise" target="_blank" class="btn btn-primary me-1"
-                               invisible="not to_buy or state not in ('uninstalled', 'uninstallable')" role="button">Upgrade</a>
+                            <button name="button_immediate_install" string="Activate" invisible="state != 'uninstalled'" type="object" class="btn btn-primary me-1" groups="base.group_system"/>
                             <button name="button_immediate_upgrade" invisible="state != 'installed'" string="Upgrade" type="object" class="btn btn-primary me-1" groups="base.group_system"/>
                             <button name="button_uninstall_wizard" invisible="state != 'installed'" string="Uninstall" type="object"  class="btn btn-secondary me-1" groups="base.group_system"/>
                             <button name="button_uninstall_cancel" invisible="state != 'to remove'" string="Cancel Uninstall" type="object" class="btn btn-secondary me-1" groups="base.group_system"/>
@@ -177,11 +175,10 @@
                                 <code groups="base.group_no_one"><field name="name"/></code>
                             </p>
                             <footer class="w-100 justify-content-between">
-                                <button type="object" class="btn btn-primary btn-sm" name="button_immediate_install" invisible="state != 'uninstalled'" t-if="! record.to_buy.raw_value" groups="base.group_system">Activate</button>
+                                <button type="object" class="btn btn-primary btn-sm" name="button_immediate_install" invisible="state != 'uninstalled'" groups="base.group_system">Activate</button>
                                 <div t-if="installed" class="d-flex align-items-center text-muted float-start">Installed</div>
                                 <a t-att-href="record.website.raw_value" target="_blank" invisible="website in (False, '')" class="btn btn-sm btn-secondary float-end o-hidden-ios" role="button">Learn More</a>
                                 <a type="edit" class="btn btn-secondary btn-sm float-end" role="button" invisible="website != ''">Module Info</a>
-                                <a href="https://odoo.com/pricing?utm_source=db&amp;utm_medium=module#hosting=on_premise" target="_blank" class="btn btn-info btn-sm" invisible="state not in ('uninstalled', 'uninstallable')" t-if="record.to_buy.raw_value" role="button" groups="base.group_system">Upgrade</a>
                                 <button invisible="state != 'to remove'" type="object" class="btn btn-sm btn-primary" name="button_uninstall_cancel" groups="base.group_system">Cancel Uninstall</button>
                                 <button invisible="state != 'to install'" type="object" class="btn btn-sm btn-primary" name="button_install_cancel" groups="base.group_system">Cancel Install</button>
                             </footer>
