@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_external_connector_root" name="External Data" sequence="1" web_icon="external_connector,static/description/icon.png"/>
+
+    <menuitem id="menu_external_selector"
+              name="Switch Database"
+              parent="menu_external_connector_root"
+              action="action_external_selector"
+              sequence="10"/>
+
+    <menuitem id="menu_external_configuration"
+              name="Configuration"
+              parent="menu_external_connector_root"
+              sequence="20"/>
+
+    <menuitem id="menu_external_connection"
+              name="Data Sources"
+              parent="menu_external_configuration"
+              action="action_external_connection"
+              sequence="10"/>
+</odoo>
