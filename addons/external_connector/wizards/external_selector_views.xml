@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard View -->
+    <record id="view_external_selector_form" model="ir.ui.view">
+        <field name="name">external.selector.form</field>
+        <field name="model">external.selector</field>
+        <field name="arch" type="xml">
+            <form string="Select Data Source">
+                <group>
+                    <field name="connection_id"/>
+                </group>
+                <footer>
+                    <button name="action_connect" string="Connect &amp; View" type="object" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Viewer View -->
+    <record id="view_external_data_viewer_form" model="ir.ui.view">
+        <field name="name">external.data.viewer.form</field>
+        <field name="model">external.data.viewer</field>
+        <field name="arch" type="xml">
+            <form string="Data Viewer">
+                <sheet>
+                    <group>
+                        <field name="connection_id"/>
+                    </group>
+                    <div>
+                        <field name="data_content" nolabel="1"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_external_selector" model="ir.actions.act_window">
+        <field name="name">Switch Data Source</field>
+        <field name="res_model">external.selector</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
