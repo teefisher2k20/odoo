@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Update the main company logo -->
+        <record id="base.main_company" model="res.company">
+            <field name="logo" type="base64" file="my_logo/static/img/my_logo.png"/>
+        </record>
+    </data>
+</odoo>
