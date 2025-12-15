@@ -46,7 +46,7 @@ class AccountAnalyticDistributionModel(models.Model):
               JOIN account_analytic_account account
                 ON ARRAY[account.id::text] && %s
              WHERE account.company_id IS NOT NULL AND model.id = ANY(%s)
-               AND (model.company_id IS NULL 
+               AND (model.company_id IS NULL
                 OR model.company_id != account.company_id)
             """,
             self._query_analytic_accounts('model'),
@@ -55,18 +55,22 @@ class AccountAnalyticDistributionModel(models.Model):
         self.flush_model(['company_id', 'analytic_distribution'])
         self.env.cr.execute(query)
         if self.env.cr.dictfetchone():
-            raise UserError(_('You defined a distribution with analytic account(s) belonging to a specific company but a model shared between companies or with a different company'))
+            raise UserError(
+                _('You defined a distribution with analytic account(s) belonging to a specific company but a model shared between companies or with a different company'))
 
     @api.model
     def _get_distribution(self, vals):
         """ Returns the combined distribution from all matching models based on the vals dict provided
             This method should be called to prefill analytic distribution field on several models """
-        applicable_models = self._get_applicable_models({k: v for k, v in vals.items() if k != 'related_root_plan_ids'})
+        applicable_models = self._get_applicable_models(
+            {k: v for k, v in vals.items() if k != 'related_root_plan_ids'})
 
         res = {}
-        applied_plans = vals.get('related_root_plan_ids', self.env['account.analytic.plan'])
+        applied_plans = vals.get(
+            'related_root_plan_ids', self.env['account.analytic.plan'])
         for model in applicable_models:
-            # ignore model if it contains an account having a root plan that was already applied
+            # ignore model if it contains an account having a root plan that
+            # was already applied
             if not applied_plans & model.distribution_analytic_account_ids.root_plan_id:
                 res |= model.analytic_distribution or {}
                 applied_plans += model.distribution_analytic_account_ids.root_plan_id

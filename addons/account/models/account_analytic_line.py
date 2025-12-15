@@ -3,6 +3,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
     _description = 'Analytic Line'
@@ -42,7 +43,12 @@ class AccountAnalyticLine(models.Model):
     )
     code = fields.Char(size=8)
     ref = fields.Char(string='Ref.')
-    category = fields.Selection(selection_add=[('invoice', 'Customer Invoice'), ('vendor_bill', 'Vendor Bill')])
+    category = fields.Selection(
+        selection_add=[
+            ('invoice', 'Customer Invoice'),
+            ('vendor_bill', 'Vendor Bill')
+        ]
+    )
 
     @api.depends('move_line_id')
     def _compute_general_account_id(self):
@@ -52,8 +58,14 @@ class AccountAnalyticLine(models.Model):
     @api.constrains('move_line_id', 'general_account_id')
     def _check_general_account_id(self):
         for line in self:
-            if line.move_line_id and line.general_account_id != line.move_line_id.account_id:
-                raise ValidationError(_('The journal item is not linked to the correct financial account'))
+            if (
+                line.move_line_id and
+                line.general_account_id != line.move_line_id.account_id
+            ):
+                raise ValidationError(
+                    _('The journal item is not linked to the correct financial'
+                      ' account')
+                )
 
     @api.depends('move_line_id.partner_id')
     def _compute_partner_id(self):
@@ -65,16 +77,26 @@ class AccountAnalyticLine(models.Model):
         if not self.product_id:
             return {}
 
-        prod_accounts = self.product_id.product_tmpl_id.with_company(self.company_id)._get_product_accounts()
+        prod_accounts = self.product_id.product_tmpl_id.with_company(
+            self.company_id
+        )._get_product_accounts()
         unit = self.product_uom_id
         account = prod_accounts['expense']
-        if not unit or self.product_id.uom_po_id.category_id.id != unit.category_id.id:
+        if (
+            not unit or
+            self.product_id.uom_po_id.category_id.id != unit.category_id.id
+        ):
             unit = self.product_id.uom_po_id
 
         # Compute based on pricetype
-        amount_unit = self.product_id._price_compute('standard_price', uom=unit)[self.product_id.id]
+        amount_unit = self.product_id._price_compute(
+            'standard_price', uom=unit)[self.product_id.id]
         amount = amount_unit * self.unit_amount or 0.0
-        result = (self.currency_id.round(amount) if self.currency_id else round(amount, 2)) * -1
+        result = (
+            self.currency_id.round(amount)
+            if self.currency_id
+            else round(amount, 2)
+        ) * -1
         self.amount = result
         self.general_account_id = account
         self.product_uom_id = unit
@@ -84,7 +106,9 @@ class AccountAnalyticLine(models.Model):
         if self.env.context.get('account_id'):
             return _(
                 "Entries: %(account)s",
-                account=self.env['account.analytic.account'].browse(self.env.context['account_id']).name
+                account=self.env['account.analytic.account'].browse(
+                    self.env.context['account_id']
+                ).name
             )
         return super().view_header_get(view_id, view_type)
 
@@ -96,7 +120,8 @@ class AccountAnalyticLine(models.Model):
     def write(self, vals):
         affected_move_lines = self.move_line_id
         res = super().write(vals)
-        if any(field in vals for field in ['amount', 'move_line_id'] + self._get_plan_fnames()):
+        fnames = ['amount', 'move_line_id'] + self._get_plan_fnames()
+        if any(field in vals for field in fnames):
             if 'move_line_id' in vals:
                 affected_move_lines |= self.move_line_id
             affected_move_lines._update_analytic_distribution()
