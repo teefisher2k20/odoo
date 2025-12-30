@@ -996,9 +996,13 @@ class ModuleDependency(models.Model):
     module_id = fields.Many2one('ir.module.module', 'Module', ondelete='cascade')
 
     # the module corresponding to the dependency, and its status
-    depend_id = fields.Many2one('ir.module.module', 'Dependency',
-                                compute='_compute_depend', search='_search_depend')
-    state = fields.Selection(DEP_STATES, string='Status', compute='_compute_state')
+    depend_id = fields.Many2one(
+        'ir.module.module', 'Dependency',
+        compute='_compute_depend', search='_search_depend'
+    )
+    state = fields.Selection(
+        DEP_STATES, string='Status', compute='_compute_state'
+    )
 
     auto_install_required = fields.Boolean(
         default=True,
@@ -1030,14 +1034,23 @@ class ModuleDependency(models.Model):
     def all_dependencies(self, module_names):
         to_search = {key: True for key in module_names}
         res = {}
+
         def search_direct_deps(to_search, res):
             to_search_list = list(to_search.keys())
-            dependencies = self.web_search_read(domain=[("module_id.name", "in", to_search_list)], specification={"module_id":{"fields":{"name":{}}}, "name": {}, })["records"]
+            dependencies = self.web_search_read(
+                domain=[("module_id.name", "in", to_search_list)],
+                specification={
+                    "module_id": {"fields": {"name": {}}},
+                    "name": {},
+                }
+            )["records"]
             to_search.clear()
             for dependency in dependencies:
                 dep_name = dependency["name"]
                 mod_name = dependency["module_id"]["name"]
-                if dep_name not in res and dep_name not in to_search and dep_name not in to_search_list:
+                if (dep_name not in res and
+                        dep_name not in to_search and
+                        dep_name not in to_search_list):
                     to_search[dep_name] = True
                 if mod_name not in res:
                     res[mod_name] = list()
@@ -1057,12 +1070,18 @@ class ModuleExclusion(models.Model):
     name = fields.Char(index=True)
 
     # the module that excludes it
-    module_id = fields.Many2one('ir.module.module', 'Module', ondelete='cascade')
+    module_id = fields.Many2one(
+        'ir.module.module', 'Module', ondelete='cascade'
+    )
 
     # the module corresponding to the exclusion, and its status
-    exclusion_id = fields.Many2one('ir.module.module', 'Exclusion Module',
-                                   compute='_compute_exclusion', search='_search_exclusion')
-    state = fields.Selection(DEP_STATES, string='Status', compute='_compute_state')
+    exclusion_id = fields.Many2one(
+        'ir.module.module', 'Exclusion Module',
+        compute='_compute_exclusion', search='_search_exclusion'
+    )
+    state = fields.Selection(
+        DEP_STATES, string='Status', compute='_compute_state'
+    )
 
     @api.depends('name')
     def _compute_exclusion(self):
