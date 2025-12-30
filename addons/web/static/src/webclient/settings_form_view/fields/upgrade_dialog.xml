@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
     <t t-name="web.UpgradeDialog">
-        <Dialog size="'md'" title.translate="Odoo Enterprise">
+        <Dialog size="'md'" title.translate="Enterprise Edition">
             <div class="row" role="status">
                 <div class="col-6">
-                    Get this feature and much more with Odoo Enterprise!
+                    Get this feature and much more with the Enterprise Edition!
                     <ul class="list-unstyled">
                         <li><i class="fa fa-check"></i> Access to all Enterprise Apps</li>
                         <li><i class="fa fa-check"></i> New design</li>

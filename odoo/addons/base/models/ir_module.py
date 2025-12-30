@@ -316,8 +316,8 @@ class Module(models.Model):
         ('AGPL-3', 'Affero GPL-3'),
         ('LGPL-3', 'LGPL Version 3'),
         ('Other OSI approved licence', 'Other OSI Approved License'),
-        ('OEEL-1', 'Odoo Enterprise Edition License v1.0'),
-        ('OPL-1', 'Odoo Proprietary License v1.0'),
+        ('OEEL-1', 'Enterprise Edition License v1.0'),
+        ('OPL-1', 'Proprietary License v1.0'),
         ('Other proprietary', 'Other Proprietary')
     ], string='License', default='LGPL-3', readonly=True)
     menus_by_module = fields.Text(string='Menus', compute='_get_views', store=True)
@@ -327,7 +327,9 @@ class Module(models.Model):
     icon = fields.Char('Icon URL')
     icon_image = fields.Binary(string='Icon', compute='_get_icon_image')
     icon_flag = fields.Char(string='Flag', compute='_get_icon_image')
-    to_buy = fields.Boolean('Odoo Enterprise Module', default=False, readonly=True)  # Always False - all modules are free to use
+    to_buy = fields.Boolean(
+        'Enterprise Module', default=False, readonly=True
+    )  # Always False - all modules are free to use
     has_iap = fields.Boolean(compute='_compute_has_iap')
 
     _sql_constraints = [
@@ -602,9 +604,11 @@ class Module(models.Model):
             # during execution, the lock won't be released until timeout.
             self._cr.execute("SELECT * FROM ir_cron FOR UPDATE NOWAIT")
         except psycopg2.OperationalError:
-            raise UserError(_("Odoo is currently processing a scheduled action.\n"
-                              "Module operations are not possible at this time, "
-                              "please try again later or contact your system administrator."))
+            raise UserError(_(
+                "The system is currently processing a scheduled action.\n"
+                "Module operations are not possible at this time, "
+                "please try again later or contact your system administrator."
+            ))
         function(self)
 
         self._cr.commit()

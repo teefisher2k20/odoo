@@ -18,7 +18,10 @@ __path__ = [
 import sys
 MIN_PY_VERSION = (3, 10)
 MAX_PY_VERSION = (3, 13)
-assert sys.version_info > MIN_PY_VERSION, f"Outdated python version detected, Odoo requires Python >= {'.'.join(map(str, MIN_PY_VERSION))} to run."
+assert sys.version_info > MIN_PY_VERSION, (
+    f"Outdated python version detected, this system requires Python >= "
+    f"{'.'.join(map(str, MIN_PY_VERSION))} to run."
+)
 
 # ----------------------------------------------------------
 # Shortcuts

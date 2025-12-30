@@ -70,7 +70,7 @@ export class BarcodeVideoScanner extends Component {
             } catch (err) {
                 const errors = {
                     NotFoundError: _t("No device can be found."),
-                    NotAllowedError: _t("Odoo needs your authorization first."),
+                    NotAllowedError: _t("The system needs your authorization first."),
                 };
                 const errorMessage = _t("Could not start scanning. %(message)s", {
                     message: errors[err.name] || err.message,
@@ -126,7 +126,7 @@ export class BarcodeVideoScanner extends Component {
         // FIXME: even if it shouldn't happened, a timeout could be useful here.
         while (!isVideoElementReady(this.videoPreviewRef.el)) {
             await delay(10);
-            if (status(this) === "destroyed"){
+            if (status(this) === "destroyed") {
                 return false;
             }
         }

@@ -64,7 +64,7 @@ export class Dialog extends Component {
         header: true,
         size: "lg",
         technical: true,
-        title: "Odoo",
+        title: "System",
         withBodyPadding: true,
     };
 

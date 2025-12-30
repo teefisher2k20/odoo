@@ -9,7 +9,7 @@ import { browser } from "../../core/browser/browser";
 import { registry } from "../../core/registry";
 
 function documentationItem(env) {
-    const documentationURL = "https://www.odoo.com/documentation/18.0";
+    const documentationURL = "#";
     return {
         type: "item",
         id: "documentation",
@@ -92,14 +92,14 @@ export function odooAccountItem(env) {
     return {
         type: "item",
         id: "account",
-        description: _t("My Odoo.com account"),
+        description: _t("My Account"),
         callback: () => {
             rpc("/web/session/account")
                 .then((url) => {
                     browser.open(url, "_blank");
                 })
                 .catch(() => {
-                    browser.open("https://accounts.odoo.com/account", "_blank");
+                    browser.open("#", "_blank");
                 });
         },
         sequence: 60,

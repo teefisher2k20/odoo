@@ -13,8 +13,8 @@ odooExceptionTitleMap.forEach((title, exceptionName) => {
 });
 
 const sessionExpired = {
-    title: _t("Odoo Session Expired"),
-    message: _t("Your Odoo session expired. The current page is about to be refreshed."),
+    title: _t("System Session Expired"),
+    message: _t("Your session expired. The current page is about to be refreshed."),
     buttons: [
         {
             text: _t("Ok"),

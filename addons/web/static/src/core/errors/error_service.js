@@ -73,8 +73,7 @@ export const errorService = {
                     if (shouldLogError()) {
                         uncaughtError.event.preventDefault();
                         console.error(
-                            `@web/core/error_service: handler "${name}" failed with "${
-                                e.cause || e
+                            `@web/core/error_service: handler "${name}" failed with "${e.cause || e
                             }" while trying to handle:\n` + uncaughtError.traceback
                         );
                     }
@@ -113,7 +112,7 @@ export const errorService = {
             if (isRedactedError) {
                 uncaughtError = new ThirdPartyScriptError();
                 uncaughtError.traceback =
-                    `An error whose details cannot be accessed by the Odoo framework has occurred.\n` +
+                    `An error whose details cannot be accessed by the framework has occurred.\n` +
                     `The error probably originates from a JavaScript file served from a different origin.\n` +
                     `The full error is available in the browser console.`;
             } else {
@@ -166,7 +165,7 @@ export const errorService = {
                 }
                 traceback =
                     `Uncaught unknown Error\n` +
-                    `An unknown error occured. This may be due to a Chrome extension meddling with Odoo.\n` +
+                    `An unknown error occured. This may be due to a Chrome extension meddling with the system.\n` +
                     `(Opening your browser console might give you a hint on the error.)`;
             }
             const uncaughtError = new UncaughtPromiseError();
