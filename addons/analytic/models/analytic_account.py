@@ -2,7 +2,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from collections import defaultdict
-import itertools
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, RedirectWarning
 from odoo.tools import groupby, SQL
@@ -53,7 +52,7 @@ class AccountAnalyticAccount(models.Model):
 
     line_ids = fields.One2many(
         'account.analytic.line',
-        'auto_account_id',  # magic link to the right column (plan) by using the context in the view
+        'auto_account_id',  # magic link to the right column (plan)
         string="Analytic Lines",
     )
 
@@ -92,12 +91,18 @@ class AccountAnalyticAccount(models.Model):
 
     @api.constrains('company_id')
     def _check_company_consistency(self):
-        for company, accounts in groupby(self, lambda account: account.company_id):
+        for company, accounts in groupby(
+            self, lambda account: account.company_id
+        ):
             if company and self.env['account.analytic.line'].sudo().search_count([
-                ('auto_account_id', 'in', [account.id for account in accounts]),
+                ('auto_account_id', 'in', [
+                 account.id for account in accounts]),
                 '!', ('company_id', 'child_of', company.id),
             ], limit=1):
-                raise UserError(_("You can't set a different company on your analytic account since there are some analytic items linked to it."))
+                raise UserError(
+                    _("You can't set a different company on your analytic account"
+                      " since there are some analytic items linked to it.")
+                )
 
     @api.depends('code', 'partner_id')
     def _compute_display_name(self):
@@ -106,7 +111,10 @@ class AccountAnalyticAccount(models.Model):
             if analytic.code:
                 name = f'[{analytic.code}] {name}'
             if analytic.partner_id.commercial_partner_id.name:
-                name = f'{name} - {analytic.partner_id.commercial_partner_id.name}'
+                name = (
+                    f'{name} - '
+                    f'{analytic.partner_id.commercial_partner_id.name}'
+                )
             analytic.display_name = name
 
     def copy_data(self, default=None):
@@ -121,10 +129,11 @@ class AccountAnalyticAccount(models.Model):
         self_context = self
         if len(self) == 1:
             self_context = self.with_context(analytic_plan_id=self.plan_id.id)
-        return super(AccountAnalyticAccount, self_context).web_read(specification)
+        return super(AccountAnalyticAccount,
+                     self_context).web_read(specification)
 
     def _read_group_select(self, aggregate_spec, query):
-        # flag balance/debit/credit as aggregatable, and manually sum the values
+        # flag balance/debit/credit as aggregatable, and manually sum values
         # from the records in the group
         if aggregate_spec in ('balance:sum', 'debit:sum', 'credit:sum'):
             return super()._read_group_select('id:recordset', query)
@@ -133,9 +142,13 @@ class AccountAnalyticAccount(models.Model):
     def _read_group_postprocess_aggregate(self, aggregate_spec, raw_values):
         if aggregate_spec in ('balance:sum', 'debit:sum', 'credit:sum'):
             field_name = aggregate_spec.split(':')[0]
-            column = super()._read_group_postprocess_aggregate('id:recordset', raw_values)
+            column = super()._read_group_postprocess_aggregate(
+                'id:recordset', raw_values
+            )
             return (sum(records.mapped(field_name)) for records in column)
-        return super()._read_group_postprocess_aggregate(aggregate_spec, raw_values)
+        return super()._read_group_postprocess_aggregate(
+            aggregate_spec, raw_values
+        )
 
     @api.depends('line_ids.amount')
     def _compute_debit_credit_balance(self):
@@ -155,7 +168,8 @@ class AccountAnalyticAccount(models.Model):
 
         for plan, accounts in self.grouped('plan_id').items():
             credit_groups = self.env['account.analytic.line']._read_group(
-                domain=domain + [(plan._column_name(), 'in', self.ids), ('amount', '>=', 0.0)],
+                domain=domain + [(plan._column_name(), 'in',
+                                  self.ids), ('amount', '>=', 0.0)],
                 groupby=[plan._column_name(), 'currency_id'],
                 aggregates=['amount:sum'],
             )
@@ -164,7 +178,8 @@ class AccountAnalyticAccount(models.Model):
                 data_credit[account.id] += convert(amount_sum, currency)
 
             debit_groups = self.env['account.analytic.line']._read_group(
-                domain=domain + [(plan._column_name(), 'in', self.ids), ('amount', '<', 0.0)],
+                domain=domain + [(plan._column_name(), 'in',
+                                  self.ids), ('amount', '<', 0.0)],
                 groupby=[plan._column_name(), 'currency_id'],
                 aggregates=['amount:sum'],
             )
@@ -177,16 +192,25 @@ class AccountAnalyticAccount(models.Model):
                 account.credit = data_credit.get(account.id, 0.0)
                 account.balance = account.credit - account.debit
 
-    def _update_accounts_in_analytic_lines(self, new_fname, current_fname, accounts):
+    def _update_accounts_in_analytic_lines(
+        self, new_fname, current_fname, accounts
+    ):
         if current_fname != new_fname:
             domain = [
                 (new_fname, 'not in', accounts.ids + [False]),
                 (current_fname, 'in', accounts.ids),
             ]
-            if self.env['account.analytic.line'].sudo().search_count(domain, limit=1):
-                list_view = self.env.ref('analytic.view_account_analytic_line_tree', raise_if_not_found=False)
+            if self.env['account.analytic.line'].sudo().search_count(
+                domain, limit=1
+            ):
+                list_view = self.env.ref(
+                    'analytic.view_account_analytic_line_tree',
+                    raise_if_not_found=False
+                )
                 raise RedirectWarning(
-                    message=_("Whoa there! Making this change would wipe out your current data. Let's avoid that, shall we?"),
+                    message=_(
+                        "Whoa there! Making this change would wipe out your"
+                        " current data. Let's avoid that, shall we?"),
                     action={
                         'res_model': 'account.analytic.line',
                         'type': 'ir.actions.act_window',
@@ -211,8 +235,12 @@ class AccountAnalyticAccount(models.Model):
 
     def write(self, vals):
         if vals.get('plan_id'):
-            new_fname = self.env['account.analytic.plan'].browse(vals['plan_id'])._column_name()
+            new_fname = self.env['account.analytic.plan'].browse(
+                vals['plan_id']
+            )._column_name()
             for plan, accounts in self.grouped('plan_id').items():
                 current_fname = plan._column_name()
-                self._update_accounts_in_analytic_lines(new_fname, current_fname, accounts)
+                self._update_accounts_in_analytic_lines(
+                    new_fname, current_fname, accounts
+                )
         return super().write(vals)

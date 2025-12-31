@@ -12,8 +12,10 @@ class FinancialYearOpeningWizard(models.TransientModel):
     _description = 'Opening Balance of Financial Year'
 
     company_id = fields.Many2one(comodel_name='res.company', required=True)
-    opening_move_posted = fields.Boolean(string='Opening Move Posted', compute='_compute_opening_move_posted')
-    opening_date = fields.Date(string='Opening Date', required=True, related='company_id.account_opening_date', help="Date from which the accounting is managed in Odoo. It is the date of the opening entry.", readonly=False)
+    opening_move_posted = fields.Boolean(
+        string='Opening Move Posted', compute='_compute_opening_move_posted')
+    opening_date = fields.Date(string='Opening Date', required=True, related='company_id.account_opening_date',
+                               help="Date from which the accounting is managed in Odoo. It is the date of the opening entry.", readonly=False)
     fiscalyear_last_day = fields.Integer(related="company_id.fiscalyear_last_day", required=True, readonly=False,
                                          help="The last day of the month will be used if the chosen day doesn't exist.")
     fiscalyear_last_month = fields.Selection(related="company_id.fiscalyear_last_month", readonly=False,
@@ -32,11 +34,12 @@ class FinancialYearOpeningWizard(models.TransientModel):
         # fields is done one field at a time.
         for wiz in self:
             try:
-                date(2020, int(wiz.fiscalyear_last_month), wiz.fiscalyear_last_day)
+                date(2020, int(wiz.fiscalyear_last_month),
+                     wiz.fiscalyear_last_day)
             except ValueError:
                 raise ValidationError(
                     _('Incorrect fiscal year date: day is out of range for month. Month: %(month)s; Day: %(day)s',
-                    month=wiz.fiscalyear_last_month, day=wiz.fiscalyear_last_day)
+                      month=wiz.fiscalyear_last_month, day=wiz.fiscalyear_last_day)
                 )
 
     def write(self, vals):
@@ -60,10 +63,12 @@ class FinancialYearOpeningWizard(models.TransientModel):
         return super().write(vals)
 
     def action_save_onboarding_fiscal_year(self):
-        step_state = self.env['onboarding.onboarding.step'].with_company(self.company_id).action_validate_step('account.onboarding_onboarding_step_fiscal_year')
+        step_state = self.env['onboarding.onboarding.step'].with_company(
+            self.company_id).action_validate_step('account.onboarding_onboarding_step_fiscal_year')
         # move the state to DONE to avoid an update in the web_read
         if step_state == 'JUST_DONE':
-            self.env.ref('account.onboarding_onboarding_account_dashboard')._prepare_rendering_values()
+            self.env.ref(
+                'account.onboarding_onboarding_account_dashboard')._prepare_rendering_values()
         return {'type': 'ir.actions.client', 'tag': 'soft_reload'}
 
 
@@ -73,16 +78,20 @@ class SetupBarBankConfigWizard(models.TransientModel):
     _description = 'Bank setup manual config'
     _check_company_auto = True
 
-    res_partner_bank_id = fields.Many2one(comodel_name='res.partner.bank', ondelete='cascade', required=True)
-    new_journal_name = fields.Char(default=lambda self: self.linked_journal_id.name, inverse='set_linked_journal_id', required=True, help='Will be used to name the Journal related to this bank account')
+    res_partner_bank_id = fields.Many2one(
+        comodel_name='res.partner.bank', ondelete='cascade', required=True)
+    new_journal_name = fields.Char(default=lambda self: self.linked_journal_id.name, inverse='set_linked_journal_id',
+                                   required=True, help='Will be used to name the Journal related to this bank account')
     linked_journal_id = fields.Many2one(string="Journal",
-        comodel_name='account.journal', inverse='set_linked_journal_id',
-        compute="_compute_linked_journal_id",
-        check_company=True,
-        domain=[('type', '=', 'bank'), ('bank_account_id', '=', False)])
+                                        comodel_name='account.journal', inverse='set_linked_journal_id',
+                                        compute="_compute_linked_journal_id",
+                                        check_company=True,
+                                        domain=[('type', '=', 'bank'), ('bank_account_id', '=', False)])
     bank_bic = fields.Char(related='bank_id.bic', readonly=False, string="Bic")
-    num_journals_without_account = fields.Integer(default=lambda self: self._number_unlinked_journal())
-    company_id = fields.Many2one('res.company', required=True, compute='_compute_company_id')
+    num_journals_without_account = fields.Integer(
+        default=lambda self: self._number_unlinked_journal())
+    company_id = fields.Many2one(
+        'res.company', required=True, compute='_compute_company_id')
 
     def _number_unlinked_journal(self):
         return self.env['account.journal'].search_count([
@@ -119,14 +128,17 @@ class SetupBarBankConfigWizard(models.TransientModel):
             if record.linked_journal_id:
                 record.new_journal_name = record.linked_journal_id.name
 
-    @api.depends('journal_id')  # Despite its name, journal_id is actually a One2many field
+    # Despite its name, journal_id is actually a One2many field
+    @api.depends('journal_id')
     def _compute_linked_journal_id(self):
         for record in self:
-            record.linked_journal_id = record.journal_id and record.journal_id[0] or record.default_linked_journal_id()
+            record.linked_journal_id = record.journal_id and record.journal_id[0] or record.default_linked_journal_id(
+            )
 
     def default_linked_journal_id(self):
         for journal_id in self.env['account.journal'].search([('type', '=', 'bank'), ('bank_account_id', '=', False)]):
-            empty_journal_count = self.env['account.move'].search_count([('journal_id', '=', journal_id.id)])
+            empty_journal_count = self.env['account.move'].search_count(
+                [('journal_id', '=', journal_id.id)])
             if empty_journal_count == 0:
                 return journal_id.id
         return False
@@ -137,7 +149,8 @@ class SetupBarBankConfigWizard(models.TransientModel):
         for record in self:
             selected_journal = record.linked_journal_id
             if not selected_journal:
-                new_journal_code = self.env['account.journal'].get_next_bank_cash_default_code('bank', self.env.company)
+                new_journal_code = self.env['account.journal'].get_next_bank_cash_default_code(
+                    'bank', self.env.company)
                 company = self.env.company
                 record.linked_journal_id = self.env['account.journal'].create({
                     'name': record.new_journal_name,

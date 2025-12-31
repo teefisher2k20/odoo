@@ -20,7 +20,8 @@ class AccountAnalyticAccount(models.Model):
 
     @api.depends('line_ids')
     def _compute_invoice_count(self):
-        sale_types = self.env['account.move'].get_sale_types(include_receipts=True)
+        sale_types = self.env['account.move'].get_sale_types(
+            include_receipts=True)
         data = self.env['account.move.line']._read_group(
             [
                 ('parent_state', '=', 'posted'),
@@ -36,7 +37,8 @@ class AccountAnalyticAccount(models.Model):
 
     @api.depends('line_ids')
     def _compute_vendor_bill_count(self):
-        purchase_types = self.env['account.move'].get_purchase_types(include_receipts=True)
+        purchase_types = self.env['account.move'].get_purchase_types(
+            include_receipts=True)
         data = self.env['account.move.line']._read_group(
             [
                 ('parent_state', '=', 'posted'),
@@ -53,7 +55,8 @@ class AccountAnalyticAccount(models.Model):
     def action_view_invoice(self):
         self.ensure_one()
         account_move_lines = self.env['account.move.line'].search_fetch([
-            ('move_id.move_type', 'in', self.env['account.move'].get_sale_types()),
+            ('move_id.move_type', 'in',
+             self.env['account.move'].get_sale_types()),
             ('analytic_distribution', 'in', self.ids),
         ], ['move_id'])
         return {
@@ -68,7 +71,8 @@ class AccountAnalyticAccount(models.Model):
     def action_view_vendor_bill(self):
         self.ensure_one()
         account_move_lines = self.env['account.move.line'].search_fetch([
-            ('move_id.move_type', 'in', self.env['account.move'].get_purchase_types()),
+            ('move_id.move_type', 'in',
+             self.env['account.move'].get_purchase_types()),
             ('analytic_distribution', 'in', self.ids),
         ], ['move_id'])
         return {

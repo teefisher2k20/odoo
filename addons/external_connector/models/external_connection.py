@@ -36,7 +36,7 @@ class ExternalConnection(models.Model):
 
     # Database Fields
     host = fields.Char(string='Host')
-    port = fields.Integer(string='Port', default=3306)
+    port = fields.Integer(string='Port')
     user = fields.Char(string='User')
     password = fields.Char(string='Password')
     db_name = fields.Char(string='Database Name')
@@ -49,6 +49,23 @@ class ExternalConnection(models.Model):
     excel_file = fields.Binary(string='Excel File')
     excel_filename = fields.Char(string='Filename')
 
+    # --- HELPER METHODS ---
+    def _get_google_credentials(self):
+        """Helper to get Google credentials from stored JSON."""
+        self.ensure_one()
+        if not self.google_json_key:
+            return None
+        try:
+            creds_dict = json.loads(self.google_json_key)
+            scopes = [
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/drive.readonly'
+            ]
+            return Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        except (json.JSONDecodeError, TypeError):
+            raise UserError("Invalid Google Service Account JSON key.")
+
+    # --- ACTION METHODS ---
     def test_connection(self):
         self.ensure_one()
         status = False
@@ -87,12 +104,11 @@ class ExternalConnection(models.Model):
             elif self.connection_type == 'google_sheets':
                 if not gspread:
                     raise UserError("Google Sheets library not installed.")
-                if not self.google_json_key:
-                    raise UserError("Please provide the JSON key.")
 
-                creds_dict = json.loads(self.google_json_key)
-                scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-                creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+                creds = self._get_google_credentials()
+                if not creds:
+                    raise UserError("Google JSON key is missing or invalid.")
+
                 client = gspread.authorize(creds)
 
                 if self.spreadsheet_url:
@@ -171,9 +187,9 @@ class ExternalConnection(models.Model):
                 conn.close()
 
             elif self.connection_type == 'google_sheets':
-                creds_dict = json.loads(self.google_json_key)
-                scopes = ['https://www.googleapis.com/auth/spreadsheets']
-                creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+                creds = self._get_google_credentials()
+                if not creds:
+                    raise UserError("Google JSON key is missing or invalid.")
                 client = gspread.authorize(creds)
                 sheet = client.open_by_url(self.spreadsheet_url).sheet1
                 all_values = sheet.get_all_values()

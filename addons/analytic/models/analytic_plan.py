@@ -93,6 +93,7 @@ class AccountAnalyticPlan(models.Model):
 
     def _auto_init(self):
         super()._auto_init()
+
         def precommit():
             self.env['ir.default'].set(
                 self._name,
@@ -103,10 +104,13 @@ class AccountAnalyticPlan(models.Model):
 
     @ormcache()
     def __get_all_plans(self):
-        project_plan = self.browse(int(self.env['ir.config_parameter'].sudo().get_param('analytic.project_plan', 0)))
+        project_plan = self.browse(
+            int(self.env['ir.config_parameter'].sudo().get_param('analytic.project_plan', 0)))
         if not project_plan:
-            raise UserError(_("A 'Project' plan needs to exist and its id needs to be set as `analytic.project_plan` in the system variables"))
-        other_plans = self.sudo().search([('parent_id', '=', False)]) - project_plan
+            raise UserError(
+                _("A 'Project' plan needs to exist and its id needs to be set as `analytic.project_plan` in the system variables"))
+        other_plans = self.sudo().search(
+            [('parent_id', '=', False)]) - project_plan
         return project_plan.id, other_plans.ids
 
     def _get_all_plans(self):
@@ -129,7 +133,8 @@ class AccountAnalyticPlan(models.Model):
     @api.depends('parent_id', 'parent_path')
     def _compute_root_id(self):
         for plan in self.sudo():
-            plan.root_id = int(plan.parent_path[:-1].split('/')[0]) if plan.parent_path else plan
+            plan.root_id = int(
+                plan.parent_path[:-1].split('/')[0]) if plan.parent_path else plan
 
     def _search_root_id(self, operator, value):
         if operator != '=':
@@ -140,7 +145,8 @@ class AccountAnalyticPlan(models.Model):
     def _compute_complete_name(self):
         for plan in self:
             if plan.parent_id:
-                plan.complete_name = '%s / %s' % (plan.parent_id.complete_name, plan.name)
+                plan.complete_name = '%s / %s' % (
+                    plan.parent_id.complete_name, plan.name)
             else:
                 plan.complete_name = plan.name
 
@@ -171,7 +177,8 @@ class AccountAnalyticPlan(models.Model):
         )
         plans_count = {k.id: v for k, v in plans_count.items()}
         for plan in self:
-            plan.all_account_count = sum(plans_count.get(child_id, 0) for child_id in all_children_ids.get(plan.id, []))
+            plan.all_account_count = sum(plans_count.get(
+                child_id, 0) for child_id in all_children_ids.get(plan.id, []))
 
     @api.depends('children_ids')
     def _compute_children_count(self):
@@ -182,7 +189,8 @@ class AccountAnalyticPlan(models.Model):
     def _onchange_parent_id(self):
         project_plan, __ = self._get_all_plans()
         if self._origin.id == project_plan.id:
-            raise UserError(_("You cannot add a parent to the base plan '%s'", project_plan.name))
+            raise UserError(
+                _("You cannot add a parent to the base plan '%s'", project_plan.name))
 
     def action_view_analytical_accounts(self):
         result = {
@@ -212,7 +220,8 @@ class AccountAnalyticPlan(models.Model):
         """ Returns the list of plans that should be available.
             This list is computed based on the applicabilities of root plans. """
         record_account_ids = kwargs.get('existing_account_ids', [])
-        project_plan, other_plans = self.env['account.analytic.plan']._get_all_plans()
+        project_plan, other_plans = self.env['account.analytic.plan']._get_all_plans(
+        )
         root_plans = (project_plan + other_plans).filtered(lambda p: (
             p.all_account_count > 0
             and not p.parent_id
@@ -261,7 +270,8 @@ class AccountAnalyticPlan(models.Model):
         self._find_plan_column().unlink()
         related_fields = self._find_related_field()
         res = super().unlink()
-        related_fields.filtered(lambda f: not self._is_subplan_field_used(f)).unlink()
+        related_fields.filtered(
+            lambda f: not self._is_subplan_field_used(f)).unlink()
         self.env.registry.clear_cache()
         return res
 
@@ -281,14 +291,16 @@ class AccountAnalyticPlan(models.Model):
         assert '_id_' in field.name
         root_name, depth = field.name.rsplit('_', maxsplit=1)
         plan_id_match = re.search(r'\d+', root_name)
-        plan_id = int(plan_id_match.group() if plan_id_match else next(self._get_all_plans()))
+        plan_id = int(plan_id_match.group()
+                      if plan_id_match else next(self._get_all_plans()))
         return bool(self.env['account.analytic.plan'].search([
             ('root_id', '=', plan_id),
             ('parent_path', 'like', '%'.join('/' * (int(depth) + 1))),
         ]))
 
     def _find_plan_column(self, model=False):
-        domain = [('name', 'in', [plan._strict_column_name() for plan in self])]
+        domain = [('name', 'in', [plan._strict_column_name()
+                   for plan in self])]
         if model:
             domain.append(('model', '=', model))
         return self.env['ir.model.fields'].sudo().search(domain)
@@ -300,7 +312,8 @@ class AccountAnalyticPlan(models.Model):
         return self.env['ir.model.fields'].sudo().search(domain)
 
     def _sync_all_plan_column(self):
-        model_names = self.env.registry.descendants(['analytic.plan.fields.mixin'], '_inherit') - {'analytic.plan.fields.mixin'}
+        model_names = self.env.registry.descendants(
+            ['analytic.plan.fields.mixin'], '_inherit') - {'analytic.plan.fields.mixin'}
         for model in model_names:
             self._sync_plan_column(model)
 
@@ -315,7 +328,8 @@ class AccountAnalyticPlan(models.Model):
                 # If there is a parent, we just need to make sure there is a field to group by the hierarchy level
                 # of this plan, allowing to group by sub plan
                 if prev_stored:
-                    prev_stored.with_context({MODULE_UNINSTALL_FLAG: True}).unlink()
+                    prev_stored.with_context(
+                        {MODULE_UNINSTALL_FLAG: True}).unlink()
                 description = f"{plan.root_id.name} ({depth})"
                 if not prev_related:
                     self.env['ir.model.fields'].with_context(update_custom_fields=True).sudo().create({
@@ -335,7 +349,8 @@ class AccountAnalyticPlan(models.Model):
             else:
                 # If there is no parent, then we need to create a new stored field as this is the root plan
                 if prev_related:
-                    prev_related.with_context({MODULE_UNINSTALL_FLAG: True}).unlink()
+                    prev_related.with_context(
+                        {MODULE_UNINSTALL_FLAG: True}).unlink()
                 description = plan.name
                 if not prev_stored:
                     column = plan._strict_column_name()
@@ -354,7 +369,8 @@ class AccountAnalyticPlan(models.Model):
                     if Model._auto:
                         tablename = Model._table
                         indexname = make_index_name(tablename, column)
-                        create_index(self.env.cr, indexname, tablename, [column], 'btree', f'{column} IS NOT NULL')
+                        create_index(self.env.cr, indexname, tablename, [
+                                     column], 'btree', f'{column} IS NOT NULL')
                         field['index'] = True
                 else:
                     prev_stored.field_description = description
@@ -362,15 +378,18 @@ class AccountAnalyticPlan(models.Model):
             self.children_ids._sync_plan_column(model)
 
     def write(self, vals):
-        new_parent = self.env['account.analytic.plan'].browse(vals.get('parent_id'))
-        plan2previous_parent = {plan: plan.parent_id for plan in self if plan.parent_id}
+        new_parent = self.env['account.analytic.plan'].browse(
+            vals.get('parent_id'))
+        plan2previous_parent = {
+            plan: plan.parent_id for plan in self if plan.parent_id}
         if 'parent_id' in vals and new_parent:
             # Update accounts in analytic lines before _sync_plan_column() unlinks child plan's column
             for plan in self:
                 self.env['account.analytic.account']._update_accounts_in_analytic_lines(
                     new_fname=new_parent._column_name(),
                     current_fname=plan._column_name(),
-                    accounts=self.env['account.analytic.account'].search([('plan_id', 'child_of', plan.id)]),
+                    accounts=self.env['account.analytic.account'].search(
+                        [('plan_id', 'child_of', plan.id)]),
                 )
 
         res = super().write(vals)
@@ -381,7 +400,8 @@ class AccountAnalyticPlan(models.Model):
                 self.env['account.analytic.account']._update_accounts_in_analytic_lines(
                     new_fname=plan._column_name(),
                     current_fname=previous_parent._column_name(),
-                    accounts=self.env['account.analytic.account'].search([('plan_id', 'child_of', plan.id)]),
+                    accounts=self.env['account.analytic.account'].search(
+                        [('plan_id', 'child_of', plan.id)]),
                 )
         return res
 
